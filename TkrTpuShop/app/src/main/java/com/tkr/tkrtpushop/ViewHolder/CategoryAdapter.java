@@ -1,5 +1,6 @@
 package com.tkr.tkrtpushop.ViewHolder;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,11 +38,12 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
     @Override
     public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
         holder.categoryTitle.setText(categories.get(position).getTitle());
+        final int finalPosition = position; // Создаем final переменную для position
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                HomeActivity.showProductsByCategory(categories.get(position).getCat_id());
+                HomeActivity.showProductsByCategory(categories.get(finalPosition).getCat_id());
             }
         });
     }

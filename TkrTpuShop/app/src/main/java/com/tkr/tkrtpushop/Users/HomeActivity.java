@@ -10,8 +10,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,6 +35,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.squareup.picasso.Picasso;
+import com.tkr.tkrtpushop.Admin.AdminAddNewProductActivity;
+import com.tkr.tkrtpushop.Admin.AdminCategoryActivity;
+
 import com.tkr.tkrtpushop.LoginActivity;
 import com.tkr.tkrtpushop.Model.Products;
 
@@ -40,6 +45,7 @@ import com.tkr.tkrtpushop.Prevalent.Prevalent;
 import com.tkr.tkrtpushop.R;
 import com.tkr.tkrtpushop.ViewHolder.Category;
 import com.tkr.tkrtpushop.ViewHolder.CategoryAdapter;
+import com.tkr.tkrtpushop.ViewHolder.ProductAdapter;
 import com.tkr.tkrtpushop.ViewHolder.ProductViewHolder;
 
 import org.jetbrains.annotations.NotNull;
@@ -55,47 +61,35 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     DatabaseReference ProductsRef;
+
+    DatabaseReference CartsRef;
     RecyclerView recyclerView;
     RecyclerView categoryRecycler;
     RecyclerView.LayoutManager layoutManager;
 
     CategoryAdapter categoryAdapter;
 
-    Button ButtonComTomPol, ButtonMissionEng, ButtonTHC;
+    Button ButtonComTomPol, ButtonMissionEng, ButtonTHC, Cart;
 
 
+    Button addToCartButton;
+    private DatabaseReference cartRef;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-
-
         setContentView(R.layout.activity_home);
 
 
 
-
         ProductsRef = FirebaseDatabase.getInstance().getReference().child("Products");
+        CartsRef = FirebaseDatabase.getInstance().getReference().child("carts");
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Меню");
         setSupportActionBar(toolbar);
 
-
-
-
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Здесь будет переход в корзину", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -106,6 +100,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
 
         };
+        ProductAdapter.clickListener = new ProductAdapter.OnAddToCartClickListener() {
+            @Override
+            public void onAddToCartClick(String pid, String name, String price) {
+
+                    // Получите TextView, где будет отображаться счетчик
+                    TextView cartItemCountTextView = findViewById(R.id.quantity);
+
+                    // Получите текущее значение счетчика
+                    int currentCount = Integer.parseInt(cartItemCountTextView.getText().toString());
+
+                    // Увеличьте счетчик
+                    currentCount++;
+
+                    // Обновите TextView с новым значением счетчика
+                    cartItemCountTextView.setText(String.valueOf(currentCount));
+
+                    // Добавьте товар в корзину (ваша логика добавления товара)
+                }
+
+            };
+
+
+
+
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -125,6 +143,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
+
+
     }
 
 
@@ -154,6 +174,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             query = ProductsRef.orderByChild("category").equalTo(category);
         }
 
+
+
         FirebaseRecyclerOptions<Products> options = new FirebaseRecyclerOptions.Builder<Products>()
                 .setQuery(query, Products.class)
                 .build();
@@ -167,6 +189,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         @Override
     protected void onStart() {
         super.onStart();
+
 
 
 
@@ -199,20 +222,46 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        Button Cart = findViewById(R.id.fab);
+        String uid = getIntent().getExtras().get("uid").toString();
+        TextView Id = findViewById(R.id.textIDView);
+        Id.setText("Ваш Id" + uid);
 
 
-        // Определяем FirebaseRecyclerOptions и FirebaseRecyclerAdapter с категорией по умолчанию
+        Cart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent cartIntent = new Intent(HomeActivity.this, CartActivity.class);
+                    cartIntent.putExtra("uid", uid);
+
+
+                    startActivity(cartIntent);
+
+
+                }
+
+
+
+            });
+
+
+
+
+            // Определяем FirebaseRecyclerOptions и FirebaseRecyclerAdapter с категорией по умолчанию
             Query query = ProductsRef;
 
 
-
-        FirebaseRecyclerOptions<Products> options = new FirebaseRecyclerOptions.Builder<Products>()
+            FirebaseRecyclerOptions<Products> options = new FirebaseRecyclerOptions.Builder<Products>()
                 .setQuery(ProductsRef, Products.class).build();
 
-        adapter = new FirebaseRecyclerAdapter<Products, ProductViewHolder>(options) {
-            @Override
-            protected void onBindViewHolder(@NonNull @NotNull ProductViewHolder holder, int i, @NonNull @NotNull Products model) {
+            adapter = new FirebaseRecyclerAdapter<Products, ProductViewHolder>(options) {
 
+
+            @Override
+            protected void onBindViewHolder(ProductViewHolder holder, int position, Products model) {
+
+                holder.setUid(uid); // Установите uid в ProductViewHolder
+                holder.setProduct(model);
 
                 if (model.getCategory().equals(categoryName)) {
                 holder.txtProductName.setText(model.getName());
@@ -222,8 +271,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 Picasso.get().load(url1).into(holder.imageView);}
 
 
+                };
 
-            }
+
+
+
 
             @NonNull
             @NotNull
@@ -233,6 +285,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 return new ProductViewHolder(view);
             }
         };
+
 
             new CountDownTimer(2000, 1000) {
                 @Override
@@ -248,6 +301,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             }.start();
 
     }
+
+
 
     @Override
     public void onBackPressed() {
@@ -288,4 +343,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         drawerLayout.closeDrawer(GravityCompat.START);
         return false;
     }
+
+
 }

@@ -2,7 +2,7 @@ package com.tkr.tkrtpushop;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
+import org.mindrot.jbcrypt.BCrypt;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -51,7 +51,9 @@ public class RegisterActivity extends AppCompatActivity {
     private void CreateAccount() {
         String username = usernameInput.getText().toString();
         String phone = phoneInput.getText().toString();
-        String password = passwordInput.getText().toString();
+        String unhashedpassword = passwordInput.getText().toString();
+        String password = BCrypt.hashpw(unhashedpassword, BCrypt.gensalt());
+
 
         if(TextUtils.isEmpty(username))
         {

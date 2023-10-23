@@ -9,7 +9,8 @@ public class Products {
     private String pid;
     private String date;
     private String time;
-
+    private String key;
+    private String uid;
     public Products(){
 
     }
@@ -23,7 +24,15 @@ public class Products {
         this.pid = pid;
         this.date = date;
         this.time = time;
+        this.uid = uid;
+        this.key = key;
     }
+    public String getUid(){return  uid;}
+
+    public void setUid(String uid){this.uid = uid; }
+
+    public String getKey(){return key;}
+    public void setKey(String key){this.key = key;}
 
     public String getName() {
         return name;

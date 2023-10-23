@@ -21,6 +21,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.tkr.tkrtpushop.Admin.AdminCategoryActivity;
 import com.tkr.tkrtpushop.Model.Users;
 import com.tkr.tkrtpushop.Users.HomeActivity;
+import com.tkr.tkrtpushop.ViewHolder.ProductAdapter;
+
+import org.mindrot.jbcrypt.BCrypt;
 
 public class LoginActivity extends AppCompatActivity
 {
@@ -102,40 +105,50 @@ public class LoginActivity extends AppCompatActivity
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if(snapshot.child(parentDbName).child(phone).exists())
-                {
+                {   String storedPassword = snapshot.child(parentDbName).child(phone).child("password").getValue(String.class);
                     Users usersData = snapshot.child(parentDbName).child(phone).getValue(Users.class);
 
-                    if(usersData.getPhone().equals(phone))
-                    {
-                        if(usersData.getPassword().equals(password))
-                        {
-                            if(parentDbName.equals("Users"))
-                            {
-                                loadingBar.dismiss();
-                                Toast.makeText(LoginActivity.this, "Успешный вход!", Toast.LENGTH_SHORT).show();
+                    if(usersData.getPhone().equals(phone)) {
+                        try {
+                            if (BCrypt.checkpw(password, storedPassword)) {
+                                if (parentDbName.equals("Users")) {
+                                    loadingBar.dismiss();
 
-                                Intent homeIntent = new Intent(LoginActivity.this, HomeActivity.class);
-                                startActivity(homeIntent);
-                            }
-                            else if(parentDbName.equals("Admins"))
-                            {
-                                loadingBar.dismiss();
-                                Toast.makeText(LoginActivity.this, "Успешный вход!", Toast.LENGTH_SHORT).show();
+                                    String uid = BCrypt.hashpw(phone, BCrypt.gensalt());
 
-                                Intent homeIntent = new Intent(LoginActivity.this, AdminCategoryActivity.class);
-                                startActivity(homeIntent);
+                                    Toast.makeText(LoginActivity.this, "Успешный вход!", Toast.LENGTH_SHORT).show();
+
+                                    Intent homeIntent = new Intent(LoginActivity.this, HomeActivity.class);
+
+
+
+                                    homeIntent.putExtra("uid", uid); // userUid - UID пользователя
+
+                                    startActivity(homeIntent);
+
+                                } else if (parentDbName.equals("Admins")) {
+                                    loadingBar.dismiss();
+                                    Toast.makeText(LoginActivity.this, "Успешный вход!", Toast.LENGTH_SHORT).show();
+
+                                    Intent homeIntent = new Intent(LoginActivity.this, AdminCategoryActivity.class);
+                                    startActivity(homeIntent);
+                                }
+                            } else {
+                                loadingBar.dismiss();
+                                Toast.makeText(LoginActivity.this, "Неверный пароль", Toast.LENGTH_SHORT).show();
                             }
+
                         }
-                        else
-                        {
+                        catch (IllegalArgumentException exc) {
+                            // Ошибка при проверке пароля
                             loadingBar.dismiss();
-                            Toast.makeText(LoginActivity.this, "Неверный пароль", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, "Ошибка при проверке пароля", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
                 else {
                     loadingBar.dismiss();
-                    Toast.makeText(LoginActivity.this,"Аккаунт с номером" + phone + "не существует", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this,"Аккаунт с номером" +" "+ phone + "не существует", Toast.LENGTH_SHORT).show();
 
                     Intent mainIntent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(mainIntent);

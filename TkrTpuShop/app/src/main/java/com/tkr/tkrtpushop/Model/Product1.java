@@ -2,21 +2,21 @@ package com.tkr.tkrtpushop.Model;
 
 public class Product1 {
 
-    int id;
-    String img, title, price;
 
-    public Product1(int id, String img, String title, String price) {
+    String id, img, title, price;
+
+    public Product1(String id, String img, String title, String price) {
         this.id = id;
         this.img = img;
         this.title = title;
         this.price = price;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

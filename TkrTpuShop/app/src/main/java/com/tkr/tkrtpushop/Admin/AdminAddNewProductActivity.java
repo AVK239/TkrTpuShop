@@ -122,23 +122,19 @@ public class AdminAddNewProductActivity extends AppCompatActivity {
                 loadingBar.dismiss();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Toast.makeText(AdminAddNewProductActivity.this, "Изображение загружено", Toast.LENGTH_SHORT).show();
 
-                Task<Uri> uriTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                    @Override
-                    public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                        if(!task.isSuccessful()){
-                            throw task.getException();
-                        }
-                        downloadImageUrl = filePath.getDownloadUrl().toString();
-                        return filePath.getDownloadUrl();
-                    }
-                }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+                // Получите ссылку на изображение после успешной загрузки
+                Task<Uri> uriTask = filePath.getDownloadUrl();
+                uriTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
                     @Override
                     public void onComplete(@NonNull Task<Uri> task) {
-                        if(task.isSuccessful()){
+                        if (task.isSuccessful()) {
+                            downloadImageUrl = task.getResult().toString();
+
                             Toast.makeText(AdminAddNewProductActivity.this, "Фото сохранено", Toast.LENGTH_SHORT).show();
 
                             SaveProductInfoToDatabase();
@@ -146,6 +142,7 @@ public class AdminAddNewProductActivity extends AppCompatActivity {
                     }
                 });
             }
+
         });
     }
 
